@@ -1,0 +1,6 @@
+# ngrok auth token — NEVER commit this!
+.env
+
+# Node
+node_modules/
+npm-debug.log*

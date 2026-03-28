@@ -1,0 +1,48 @@
+# ============================================================
+# Docker + ngrok Demo — docker-compose.yml
+# ============================================================
+# Two services:
+#   app   — our Express.js app built from the local Dockerfile
+#   ngrok — official ngrok image that creates a public tunnel
+#           pointing at the app container on port 3000
+#
+# HOW TO RUN:
+#   1. Copy .env.example to .env and paste your ngrok auth token
+#   2. Run: docker compose up
+#   3. Watch the ngrok container logs for your public URL
+#      e.g.  Forwarding  https://abc123.ngrok-free.app -> http://app:3000
+#   4. Open that URL in any browser — even from your phone!
+# ============================================================
+
+services:
+
+  # ----------------------------------------------------------
+  # Service 1: Our Express.js demo app
+  # ----------------------------------------------------------
+  app:
+    build: .                     # Build from the local Dockerfile
+    container_name: demo-app
+    ports:
+      - "3000:3000"              # Also accessible at localhost:3000
+    environment:
+      HOST_HOSTNAME: ${COMPUTERNAME}  # Injects the real Windows machine name
+    restart: unless-stopped
+
+  # ----------------------------------------------------------
+  # Service 2: ngrok tunnel
+  # Connects to 'app' service on port 3000 and exposes it to
+  # the internet with a public HTTPS URL (free tier).
+  # ----------------------------------------------------------
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: demo-ngrok
+    command: http app:3000       # Tunnel HTTP traffic to the app service
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}   # Loaded from .env file
+    ports:
+      - "4040:4040"              # ngrok traffic inspector UI (bonus!)
+                                 # Open http://localhost:4040 to inspect
+                                 # every request in real time
+    depends_on:
+      - app                      # Wait for app to start first
+    restart: unless-stopped
